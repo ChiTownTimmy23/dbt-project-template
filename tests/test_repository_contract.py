@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 import re
 import tomllib
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -50,6 +52,15 @@ REQUIRED_DAG_FILES = {
     "models/marts/unit_tests.yml",
     "tests/assert_order_amounts_are_nonnegative.sql",
     "analyses/customer_health_summary.sql",
+}
+REQUIRED_DOC_FILES = {
+    "docs/index.md",
+    "docs/getting-started.md",
+    "docs/architecture.md",
+    "docs/commands.md",
+    "docs/client-onboarding.md",
+    "docs/adapter-migrations.md",
+    "docs/decisions/0001-duckdb-first.md",
 }
 
 
@@ -161,3 +172,66 @@ def test_sample_dag_demonstrates_governance_and_testing_features() -> None:
     assert "expect:" in unit_tests
     assert "ref('fct_orders')" in singular_test
     assert "order_amount < 0" in singular_test
+
+
+def test_documentation_covers_the_operating_lifecycle() -> None:
+    assert (ROOT / "README.md").is_file()
+    assert all((ROOT / path).is_file() for path in REQUIRED_DOC_FILES)
+    mkdocs = read_text("mkdocs.yml")
+    readme = read_text("README.md")
+
+    assert all(Path(path).name in mkdocs for path in REQUIRED_DOC_FILES)
+    assert all(
+        command in readme
+        for command in (
+            'just init client_project "Client Project"',
+            "just setup",
+            "just demo",
+            "just check",
+        )
+    )
+    adapter_guide = read_text("docs/adapter-migrations.md")
+    assert all(
+        adapter in adapter_guide
+        for adapter in ("Snowflake", "Databricks", "BigQuery", "Postgres")
+    )
+
+
+def test_automation_uses_the_same_gate_and_immutable_actions() -> None:
+    workflow = read_text(".github/workflows/ci.yml")
+    precommit = read_text(".pre-commit-config.yaml")
+    dependabot = yaml.safe_load(read_text(".github/dependabot.yml"))
+
+    uses_lines = [line.strip() for line in workflow.splitlines() if "uses:" in line]
+    assert len(uses_lines) == 4
+    assert all(re.fullmatch(r"- uses: [^@\s]+@[0-9a-f]{40}(?:\s+# .+)?", line) for line in uses_lines)
+    assert "just setup" in workflow
+    assert "just check" in workflow
+    assert "permissions:\n  contents: read" in workflow
+    assert "repo: local" in precommit
+    assert all(
+        hook in precommit
+        for hook in ("uv-lock-check", "ruff-check", "repository-tests", "sqlfluff-lint", "mkdocs-strict")
+    )
+    assert {update["package-ecosystem"] for update in dependabot["updates"]} == {
+        "github-actions",
+        "uv",
+    }
+
+
+def test_template_marker_rewrites_every_identity_bearing_document() -> None:
+    marker_path = ROOT / ".template-state.json"
+    if not marker_path.exists():
+        pytest.skip("project was already initialized")
+    marker = json.loads(marker_path.read_text(encoding="utf-8"))
+
+    assert {
+        ".sqlfluff",
+        "README.md",
+        "dbt_project.yml",
+        "docs/index.md",
+        "mkdocs.yml",
+        "profiles.yml",
+        "pyproject.toml",
+        "uv.lock",
+    } <= set(marker["rewrite_files"])

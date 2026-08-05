@@ -1,0 +1,28 @@
+repos:
+  - repo: local
+    hooks:
+      - id: uv-lock-check
+        name: Verify uv lockfile
+        entry: uv lock --check
+        language: system
+        pass_filenames: false
+      - id: ruff-check
+        name: Ruff
+        entry: uv run ruff check scripts tests
+        language: system
+        pass_filenames: false
+      - id: repository-tests
+        name: Repository tests
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+      - id: sqlfluff-lint
+        name: SQLFluff
+        entry: uv run sqlfluff lint models analyses tests
+        language: system
+        pass_filenames: false
+      - id: mkdocs-strict
+        name: MkDocs strict build
+        entry: uv run mkdocs build --strict
+        language: system
+        pass_filenames: false

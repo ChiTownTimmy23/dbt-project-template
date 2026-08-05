@@ -3,7 +3,18 @@
   "template_display_name": "dbt Project Template",
   "rewrite_files": [
     ".sqlfluff",
+    "CONTRIBUTING.md",
+    "README.md",
+    "SECURITY.md",
     "dbt_project.yml",
+    "docs/adapter-migrations.md",
+    "docs/architecture.md",
+    "docs/client-onboarding.md",
+    "docs/commands.md",
+    "docs/decisions/0001-duckdb-first.md",
+    "docs/getting-started.md",
+    "docs/index.md",
+    "mkdocs.yml",
     "profiles.yml",
     "pyproject.toml",
     "uv.lock"

@@ -1,0 +1,34 @@
+site_name: dbt Project Template
+site_description: Operating handbook for a DuckDB-first dbt project template
+site_url: https://chitowntimmy23.github.io/dbt-project-template/
+repo_url: https://github.com/ChiTownTimmy23/dbt-project-template
+repo_name: ChiTownTimmy23/dbt-project-template
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Architecture: architecture.md
+  - Commands: commands.md
+  - Client onboarding: client-onboarding.md
+  - Adapter migrations: adapter-migrations.md
+  - Decisions:
+      - DuckDB first: decisions/0001-duckdb-first.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.superfences
+  - tables
+
+strict: true

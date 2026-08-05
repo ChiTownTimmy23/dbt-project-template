@@ -1,0 +1,103 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: Contracted customer dimension with order activity and completed-order value.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: customer_id
+        description: Stable customer identifier and primary grain.
+        data_type: integer
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_name
+        description: Customer display name.
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: signup_date
+        description: Date the customer joined.
+        data_type: date
+        data_tests:
+          - not_null
+      - name: customer_status
+        description: Current customer lifecycle status.
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: order_count
+        description: Count of all orders placed by the customer.
+        data_type: bigint
+        data_tests:
+          - not_null
+      - name: completed_order_count
+        description: Count of completed orders placed by the customer.
+        data_type: bigint
+        data_tests:
+          - not_null
+      - name: lifetime_value
+        description: Completed-order value in major currency units.
+        data_type: decimal(18, 2)
+        data_tests:
+          - not_null
+      - name: first_order_date
+        description: Earliest order date, or null when no order exists.
+        data_type: date
+      - name: last_order_date
+        description: Latest order date, or null when no order exists.
+        data_type: date
+
+  - name: fct_orders
+    description: Contracted order fact with monetary value in major currency units.
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: order_id
+        description: Stable order identifier and primary grain.
+        data_type: integer
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: Customer that placed the order.
+        data_type: integer
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+      - name: order_date
+        description: Date the order was placed.
+        data_type: date
+        data_tests:
+          - not_null
+      - name: order_status
+        description: Current order lifecycle status.
+        data_type: varchar
+        data_tests:
+          - not_null
+      - name: order_amount
+        description: Order amount in major currency units.
+        data_type: decimal(18, 2)
+        data_tests:
+          - not_null
+
+exposures:
+  - name: customer_health_dashboard
+    label: Customer Health Dashboard
+    type: dashboard
+    maturity: medium
+    description: Example downstream dashboard built from the contracted marts.
+    url: https://example.com/customer-health
+    depends_on:
+      - ref('dim_customers')
+      - ref('fct_orders')
+    owner:
+      name: Analytics Team
+      email: analytics@example.com
+

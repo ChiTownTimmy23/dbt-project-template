@@ -33,6 +33,23 @@ REQUIRED_RECIPES = {
     "init",
     "clean",
 }
+REQUIRED_DAG_FILES = {
+    "seeds/raw_customers.csv",
+    "seeds/raw_orders.csv",
+    "models/staging/sources.yml",
+    "models/staging/stg_customers.sql",
+    "models/staging/stg_customers.yml",
+    "models/staging/stg_orders.sql",
+    "models/staging/stg_orders.yml",
+    "models/intermediate/int_customer_order_metrics.sql",
+    "models/intermediate/int_customer_order_metrics.yml",
+    "models/marts/dim_customers.sql",
+    "models/marts/fct_orders.sql",
+    "models/marts/marts.yml",
+    "models/marts/unit_tests.yml",
+    "tests/assert_order_amounts_are_nonnegative.sql",
+    "analyses/customer_health_summary.sql",
+}
 
 
 def read_text(path: str) -> str:
@@ -93,5 +110,40 @@ def test_generated_and_local_secret_paths_are_ignored() -> None:
         "*.duckdb.wal",
         ".env",
         ".env.*",
+        ".user.yml",
         "profiles.local.yml",
     } <= patterns
+
+
+def test_sample_dag_has_the_required_layers_and_dependencies() -> None:
+    assert all((ROOT / path).is_file() for path in REQUIRED_DAG_FILES)
+
+    sources = read_text("models/staging/sources.yml")
+    assert "name: raw" in sources
+    assert "name: raw_customers" in sources
+    assert "name: raw_orders" in sources
+    assert "source('raw', 'raw_customers')" in read_text("models/staging/stg_customers.sql")
+    assert "source('raw', 'raw_orders')" in read_text("models/staging/stg_orders.sql")
+
+    intermediate = read_text("models/intermediate/int_customer_order_metrics.sql")
+    assert "ref('stg_customers')" in intermediate
+    assert "ref('stg_orders')" in intermediate
+    assert "ref('int_customer_order_metrics')" in read_text("models/marts/dim_customers.sql")
+    assert "ref('stg_orders')" in read_text("models/marts/fct_orders.sql")
+
+
+def test_sample_dag_demonstrates_governance_and_testing_features() -> None:
+    marts = read_text("models/marts/marts.yml")
+    unit_tests = read_text("models/marts/unit_tests.yml")
+    singular_test = read_text("tests/assert_order_amounts_are_nonnegative.sql")
+
+    assert marts.count("enforced: true") == 2
+    assert "name: customer_health_dashboard" in marts
+    assert "ref('dim_customers')" in marts
+    assert "ref('fct_orders')" in marts
+    assert "unit_tests:" in unit_tests
+    assert "model: int_customer_order_metrics" in unit_tests
+    assert "given:" in unit_tests
+    assert "expect:" in unit_tests
+    assert "ref('fct_orders')" in singular_test
+    assert "order_amount < 0" in singular_test

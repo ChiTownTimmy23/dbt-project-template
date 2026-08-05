@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: Clean, typed customer records with source naming normalized.
+    columns:
+      - name: customer_id
+        description: Stable customer identifier.
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_name
+        description: Customer display name supplied by the source.
+        data_tests:
+          - not_null
+      - name: signup_date
+        description: Date the customer joined.
+        data_tests:
+          - not_null
+      - name: customer_status
+        description: Current source-system lifecycle status.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [active, inactive]
+

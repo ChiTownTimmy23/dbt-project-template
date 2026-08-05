@@ -1,0 +1,4 @@
+customer_id,customer_name,signup_date,status
+1,Ada Lovelace,2025-01-03,active
+2,Grace Hopper,2025-02-14,active
+3,Katherine Johnson,2025-03-21,inactive

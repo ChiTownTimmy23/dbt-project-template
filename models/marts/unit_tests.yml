@@ -1,0 +1,37 @@
+version: 2
+
+unit_tests:
+  - name: customer_order_metrics_rolls_up_completed_value
+    description: Completed value excludes pending and cancelled orders while counts retain them.
+    model: int_customer_order_metrics
+    given:
+      - input: ref('stg_customers')
+        rows:
+          - customer_id: 1
+            customer_name: Ada Lovelace
+            signup_date: '2025-01-03'
+            customer_status: active
+      - input: ref('stg_orders')
+        rows:
+          - order_id: 1001
+            customer_id: 1
+            order_date: '2025-04-01'
+            order_status: completed
+            amount_cents: 12500
+          - order_id: 1002
+            customer_id: 1
+            order_date: '2025-04-08'
+            order_status: pending
+            amount_cents: 7500
+    expect:
+      rows:
+        - customer_id: 1
+          customer_name: Ada Lovelace
+          signup_date: '2025-01-03'
+          customer_status: active
+          order_count: 2
+          completed_order_count: 1
+          lifetime_value_cents: 12500
+          first_order_date: '2025-04-01'
+          last_order_date: '2025-04-08'
+

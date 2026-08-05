@@ -1,0 +1,35 @@
+version: 2
+
+models:
+  - name: stg_orders
+    description: Clean, typed order records with amounts retained as integer cents.
+    columns:
+      - name: order_id
+        description: Stable order identifier.
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: Customer that placed the order.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+      - name: order_date
+        description: Date the order was placed.
+        data_tests:
+          - not_null
+      - name: order_status
+        description: Current order lifecycle status.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [pending, completed, cancelled]
+      - name: amount_cents
+        description: Source order amount in whole cents.
+        data_tests:
+          - not_null
+

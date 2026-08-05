@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: int_customer_order_metrics
+    description: Customer grain enriched with reusable order aggregates.
+    columns:
+      - name: customer_id
+        description: Stable customer identifier.
+        data_tests:
+          - not_null
+          - unique
+      - name: customer_name
+        description: Customer display name.
+      - name: signup_date
+        description: Date the customer joined.
+      - name: customer_status
+        description: Current customer lifecycle status.
+      - name: order_count
+        description: Count of all orders placed by the customer.
+      - name: completed_order_count
+        description: Count of completed orders placed by the customer.
+      - name: lifetime_value_cents
+        description: Sum of completed-order value in whole cents.
+      - name: first_order_date
+        description: Earliest order date, or null when no order exists.
+      - name: last_order_date
+        description: Latest order date, or null when no order exists.
+

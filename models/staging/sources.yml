@@ -1,0 +1,24 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Deterministic sample data loaded from repository seeds.
+    schema: main_raw
+    tables:
+      - name: raw_customers
+        description: One row per sample customer from the source system.
+        columns:
+          - name: customer_id
+            description: Source-system customer identifier.
+            data_tests:
+              - not_null
+              - unique
+      - name: raw_orders
+        description: One row per sample order from the source system.
+        columns:
+          - name: order_id
+            description: Source-system order identifier.
+            data_tests:
+              - not_null
+              - unique
+

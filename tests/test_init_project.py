@@ -3,9 +3,11 @@ from __future__ import annotations
 import importlib
 import json
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
+import yaml
 
 
 def load_module():
@@ -25,11 +27,13 @@ def make_project(tmp_path: Path) -> Path:
         "dbt_project.yml": "name: dbt_project_template\nprofile: dbt_project_template\n",
         "profiles.yml": "dbt_project_template:\n  target: dev\n",
         "pyproject.toml": (
+            "[project]\n"
             'name = "dbt-project-template"\n'
             'description = "dbt Project Template"\n'
         ),
         "uv.lock": 'name = "dbt-project-template"\n',
         "README.md": "# dbt Project Template\n\nUse `dbt_project_template`.\n",
+        "mkdocs.yml": "site_name: dbt Project Template\nstrict: true\n",
         "notes.txt": "dbt_project_template must not change outside the allowlist.\n",
         "seeds/raw_customers.csv": "customer_id\n1\n",
         "models/staging/stg_customers.sql": "select 1 as customer_id\n",
@@ -49,6 +53,7 @@ def make_project(tmp_path: Path) -> Path:
             "pyproject.toml",
             "uv.lock",
             "README.md",
+            "mkdocs.yml",
         ],
         "example_paths": [
             "seeds/raw_customers.csv",
@@ -124,6 +129,7 @@ def test_initialize_allow_dirty_rewrites_only_allowlisted_files(tmp_path: Path) 
         "profiles.yml",
         "pyproject.toml",
         "uv.lock",
+        "mkdocs.yml",
     }
     assert "client_analytics" in (root / "dbt_project.yml").read_text(encoding="utf-8")
     assert "client-analytics" in (root / "pyproject.toml").read_text(encoding="utf-8")
@@ -132,6 +138,46 @@ def test_initialize_allow_dirty_rewrites_only_allowlisted_files(tmp_path: Path) 
         "dbt_project_template"
     )
     assert not (root / ".template-state.json").exists()
+
+
+def test_initialize_renders_punctuation_safe_configuration(tmp_path: Path) -> None:
+    module = load_module()
+    root = make_project(tmp_path)
+
+    module.initialize(root, "client_analytics", 'ACME: O\'Reilly "Analytics"', False, False)
+
+    mkdocs = yaml.safe_load((root / "mkdocs.yml").read_text(encoding="utf-8"))
+    pyproject = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
+    assert mkdocs["site_name"] == 'ACME: O\'Reilly "Analytics"'
+    assert pyproject["project"]["name"] == "client-analytics"
+
+
+@pytest.mark.parametrize(
+    "friendly_name", ["ACME\nAnalytics", "ACME\rAnalytics", "ACME\x00Analytics"]
+)
+def test_initialize_rejects_control_characters_before_writing(
+    tmp_path: Path, friendly_name: str
+) -> None:
+    module = load_module()
+    root = make_project(tmp_path)
+
+    with pytest.raises(ValueError, match="single line"):
+        module.initialize(root, "client_analytics", friendly_name, False, False)
+
+    assert "dbt_project_template" in (root / "dbt_project.yml").read_text(encoding="utf-8")
+    assert (root / ".template-state.json").is_file()
+
+
+def test_initialize_preflights_toml_before_writing(tmp_path: Path) -> None:
+    module = load_module()
+    root = make_project(tmp_path)
+    (root / "pyproject.toml").write_text('name = "unterminated\n', encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="invalid TOML"):
+        module.initialize(root, "client_analytics", "Client Analytics", False, True)
+
+    assert "dbt_project_template" in (root / "dbt_project.yml").read_text(encoding="utf-8")
+    assert (root / ".template-state.json").is_file()
 
 
 def test_initialize_refuses_a_second_run(tmp_path: Path) -> None:

@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import tomllib
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -72,6 +73,32 @@ def _atomic_write(path: Path, content: str) -> None:
             Path(temporary_name).unlink(missing_ok=True)
 
 
+def _replace_display_name(
+    path: Path, content: str, template_name: str, friendly_name: str
+) -> str:
+    if path.suffix not in {".toml", ".yaml", ".yml"}:
+        return content.replace(template_name, friendly_name)
+
+    encoded_name = json.dumps(friendly_name, ensure_ascii=False)
+    updated = content
+    for quoted_template in (
+        json.dumps(template_name, ensure_ascii=False),
+        f"'{template_name}'",
+    ):
+        updated = updated.replace(quoted_template, encoded_name)
+    return updated.replace(template_name, encoded_name)
+
+
+def _validate_generated_configuration(generated: Iterable[tuple[Path, str]]) -> None:
+    for path, content in generated:
+        if path.suffix == ".toml":
+            try:
+                tomllib.loads(content)
+            except tomllib.TOMLDecodeError as error:
+                message = f"initialization would create invalid TOML in {path.name}: {error}"
+                raise RuntimeError(message) from error
+
+
 def initialize(
     root: Path,
     project_name: str,
@@ -81,6 +108,8 @@ def initialize(
 ) -> list[Path]:
     root = root.resolve()
     project_name = validate_project_name(project_name)
+    if any(not character.isprintable() for character in friendly_name):
+        raise ValueError("friendly name must be a single line and contain no control characters")
     friendly_name = friendly_name.strip()
     if not friendly_name:
         raise ValueError("friendly name must not be blank")
@@ -111,21 +140,27 @@ def initialize(
 
     template_project_name = state["template_project_name"]
     template_slug = template_project_name.replace("_", "-")
-    replacements = (
-        (state["template_display_name"], friendly_name),
+    project_replacements = (
         (template_project_name.upper(), project_name.upper()),
         (template_project_name, project_name),
         (template_slug, project_name.replace("_", "-")),
     )
 
+    generated: list[tuple[Path, str]] = []
     pending: list[tuple[Path, str]] = []
     for path in rewrite_paths:
         original = path.read_text(encoding="utf-8")
         updated = original
-        for old, new in replacements:
+        for old, new in project_replacements:
             updated = updated.replace(old, new)
+        updated = _replace_display_name(
+            path, updated, state["template_display_name"], friendly_name
+        )
+        generated.append((path, updated))
         if updated != original:
             pending.append((path, updated))
+
+    _validate_generated_configuration(generated)
 
     for path, content in pending:
         _atomic_write(path, content)

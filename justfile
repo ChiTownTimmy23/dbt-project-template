@@ -65,7 +65,7 @@ check: lock-check test dbt-check lint docs
 # Initialize a client project, passing all user input as shell-safe positional arguments.
 [positional-arguments]
 init project_name friendly_name *flags:
-    uv run python scripts/init_project.py "$@"
+    uv run --no-project python scripts/init_project.py "$@"
 
 # Remove only generated paths declared by dbt_project.yml.
 clean:

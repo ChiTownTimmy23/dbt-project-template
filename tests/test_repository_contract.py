@@ -113,7 +113,7 @@ def test_justfile_exposes_the_stable_command_contract() -> None:
     assert "sqlfluff lint models analyses tests" in justfile
     assert "mkdocs build --strict" in justfile
     assert "[positional-arguments]\ninit project_name friendly_name *flags:" in justfile
-    assert 'uv run python scripts/init_project.py "$@"' in justfile
+    assert 'uv run --no-project python scripts/init_project.py "$@"' in justfile
 
 
 def test_generated_and_local_secret_paths_are_ignored() -> None:

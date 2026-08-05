@@ -27,6 +27,7 @@ default-groups = ["dev"]
 
 [tool.pytest.ini_options]
 addopts = "-ra"
+pythonpath = ["."]
 testpaths = ["tests"]
 
 [tool.ruff]
@@ -35,4 +36,3 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["B", "E", "F", "I", "UP"]
-

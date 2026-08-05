@@ -4,6 +4,7 @@ import re
 import tomllib
 from pathlib import Path
 
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -69,9 +70,14 @@ def test_dbt_uses_repository_local_duckdb_profile() -> None:
     project = read_text("dbt_project.yml")
     profile = read_text("profiles.yml")
 
-    assert re.search(r"^name:\s*dbt_project_template$", project, re.MULTILINE)
-    assert re.search(r"^profile:\s*dbt_project_template$", project, re.MULTILINE)
-    assert re.search(r"^dbt_project_template:$", profile, re.MULTILINE)
+    project_name = re.search(r"^name:\s*([a-z][a-z0-9_]*)$", project, re.MULTILINE)
+    profile_name = re.search(r"^profile:\s*([a-z][a-z0-9_]*)$", project, re.MULTILINE)
+    assert project_name is not None
+    assert profile_name is not None
+    assert project_name.group(1) == profile_name.group(1)
+    assert re.search(rf"^{project_name.group(1)}:$", profile, re.MULTILINE)
+    if (ROOT / ".template-state.json").exists():
+        assert project_name.group(1) == "dbt_project_template"
     assert "type: duckdb" in profile
     assert "env_var('DBT_DUCKDB_PATH', 'target/dev.duckdb')" in profile
 
@@ -116,6 +122,10 @@ def test_generated_and_local_secret_paths_are_ignored() -> None:
 
 
 def test_sample_dag_has_the_required_layers_and_dependencies() -> None:
+    if not (ROOT / ".template-state.json").exists() and not any(
+        (ROOT / path).exists() for path in REQUIRED_DAG_FILES
+    ):
+        pytest.skip("sample DAG was intentionally removed during initialization")
     assert all((ROOT / path).is_file() for path in REQUIRED_DAG_FILES)
 
     sources = read_text("models/staging/sources.yml")
@@ -133,6 +143,10 @@ def test_sample_dag_has_the_required_layers_and_dependencies() -> None:
 
 
 def test_sample_dag_demonstrates_governance_and_testing_features() -> None:
+    if not (ROOT / ".template-state.json").exists() and not any(
+        (ROOT / path).exists() for path in REQUIRED_DAG_FILES
+    ):
+        pytest.skip("sample DAG was intentionally removed during initialization")
     marts = read_text("models/marts/marts.yml")
     unit_tests = read_text("models/marts/unit_tests.yml")
     singular_test = read_text("tests/assert_order_amounts_are_nonnegative.sql")

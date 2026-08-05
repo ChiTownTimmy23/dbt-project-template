@@ -1,0 +1,28 @@
+{
+  "template_project_name": "dbt_project_template",
+  "template_display_name": "dbt Project Template",
+  "rewrite_files": [
+    ".sqlfluff",
+    "dbt_project.yml",
+    "profiles.yml",
+    "pyproject.toml",
+    "uv.lock"
+  ],
+  "example_paths": [
+    "analyses/customer_health_summary.sql",
+    "models/intermediate/int_customer_order_metrics.sql",
+    "models/intermediate/int_customer_order_metrics.yml",
+    "models/marts/dim_customers.sql",
+    "models/marts/fct_orders.sql",
+    "models/marts/marts.yml",
+    "models/marts/unit_tests.yml",
+    "models/staging/sources.yml",
+    "models/staging/stg_customers.sql",
+    "models/staging/stg_customers.yml",
+    "models/staging/stg_orders.sql",
+    "models/staging/stg_orders.yml",
+    "seeds/raw_customers.csv",
+    "seeds/raw_orders.csv",
+    "tests/assert_order_amounts_are_nonnegative.sql"
+  ]
+}

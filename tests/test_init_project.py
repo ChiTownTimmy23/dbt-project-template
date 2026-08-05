@@ -153,3 +153,38 @@ def test_initialize_remove_example_deletes_only_declared_paths(tmp_path: Path) -
     assert not (root / "models/staging/stg_customers.sql").exists()
     assert not (root / "tests/assert_example.sql").exists()
     assert (root / "notes.txt").is_file()
+
+
+def test_initialize_rejects_allowlist_path_through_parent_symlink(tmp_path: Path) -> None:
+    module = load_module()
+    root = make_project(tmp_path)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    victim = outside / "victim.txt"
+    victim.write_text("dbt_project_template\n", encoding="utf-8")
+    (root / "linked").symlink_to(outside, target_is_directory=True)
+    marker_path = root / ".template-state.json"
+    marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    marker["rewrite_files"].append("linked/victim.txt")
+    marker_path.write_text(json.dumps(marker), encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="escapes project root"):
+        module.initialize(root, "client_analytics", "Client Analytics", False, True)
+
+    assert victim.read_text(encoding="utf-8") == "dbt_project_template\n"
+    assert marker_path.is_file()
+
+
+def test_initialize_preflights_example_paths_before_rewriting(tmp_path: Path) -> None:
+    module = load_module()
+    root = make_project(tmp_path)
+    marker_path = root / ".template-state.json"
+    marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    marker["example_paths"] = ["models/staging"]
+    marker_path.write_text(json.dumps(marker), encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="must contain files"):
+        module.initialize(root, "client_analytics", "Client Analytics", True, True)
+
+    assert "dbt_project_template" in (root / "dbt_project.yml").read_text(encoding="utf-8")
+    assert marker_path.is_file()

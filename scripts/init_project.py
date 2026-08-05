@@ -31,6 +31,8 @@ def _validated_relative_paths(root: Path, values: Iterable[str]) -> list[Path]:
         if relative.is_absolute() or ".." in relative.parts:
             raise RuntimeError(f"unsafe path in {MARKER_NAME}: {value}")
         path = root / relative
+        if not path.resolve(strict=False).is_relative_to(root):
+            raise RuntimeError(f"path escapes project root in {MARKER_NAME}: {value}")
         if path.is_symlink():
             raise RuntimeError(f"refusing symlink in {MARKER_NAME}: {value}")
         paths.append(path)
@@ -95,6 +97,17 @@ def initialize(
     missing = [path.relative_to(root).as_posix() for path in rewrite_paths if not path.is_file()]
     if missing:
         raise RuntimeError(f"rewrite allowlist contains missing files: {', '.join(missing)}")
+    if remove_example:
+        invalid_examples = [
+            path.relative_to(root).as_posix()
+            for path in example_paths
+            if path.exists() and not path.is_file()
+        ]
+        if invalid_examples:
+            raise RuntimeError(
+                "example allowlist must contain files, not directories: "
+                + ", ".join(invalid_examples)
+            )
 
     template_project_name = state["template_project_name"]
     template_slug = template_project_name.replace("_", "-")
@@ -119,8 +132,6 @@ def initialize(
 
     if remove_example:
         for path in example_paths:
-            if path.is_dir():
-                raise RuntimeError(f"example allowlist must contain files, not directories: {path}")
             path.unlink(missing_ok=True)
 
     marker_path.unlink()

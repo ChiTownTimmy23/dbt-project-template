@@ -204,14 +204,23 @@ def test_automation_uses_the_same_gate_and_immutable_actions() -> None:
 
     uses_lines = [line.strip() for line in workflow.splitlines() if "uses:" in line]
     assert len(uses_lines) == 4
-    assert all(re.fullmatch(r"- uses: [^@\s]+@[0-9a-f]{40}(?:\s+# .+)?", line) for line in uses_lines)
+    assert all(
+        re.fullmatch(r"- uses: [^@\s]+@[0-9a-f]{40}(?:\s+# .+)?", line)
+        for line in uses_lines
+    )
     assert "just setup" in workflow
     assert "just check" in workflow
     assert "permissions:\n  contents: read" in workflow
     assert "repo: local" in precommit
     assert all(
         hook in precommit
-        for hook in ("uv-lock-check", "ruff-check", "repository-tests", "sqlfluff-lint", "mkdocs-strict")
+        for hook in (
+            "uv-lock-check",
+            "ruff-check",
+            "repository-tests",
+            "sqlfluff-lint",
+            "mkdocs-strict",
+        )
     )
     assert {update["package-ecosystem"] for update in dependabot["updates"]} == {
         "github-actions",

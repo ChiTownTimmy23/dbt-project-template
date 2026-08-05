@@ -34,4 +34,3 @@ unit_tests:
           lifetime_value_cents: 12500
           first_order_date: '2025-04-01'
           last_order_date: '2025-04-08'
-

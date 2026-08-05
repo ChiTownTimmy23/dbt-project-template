@@ -6,4 +6,3 @@ dbt_project_template:
       path: "{{ env_var('DBT_DUCKDB_PATH', 'target/dev.duckdb') }}"
       schema: main
       threads: 4
-

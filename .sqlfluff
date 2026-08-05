@@ -24,4 +24,3 @@ extended_capitalisation_policy = lower
 
 [sqlfluff:rules:capitalisation.functions]
 extended_capitalisation_policy = lower
-

@@ -87,4 +87,3 @@ The complete operating handbook lives in [`docs/`](docs/index.md). Start with:
 ## License
 
 MIT. See [LICENSE](LICENSE).
-

@@ -32,4 +32,3 @@ models:
         description: Source order amount in whole cents.
         data_tests:
           - not_null
-

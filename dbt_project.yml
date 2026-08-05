@@ -31,4 +31,3 @@ seeds:
   dbt_project_template:
     +schema: raw
     +quote_columns: false
-

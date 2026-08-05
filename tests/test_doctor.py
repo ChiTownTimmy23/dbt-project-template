@@ -87,4 +87,3 @@ def test_environment_summary_redacts_sensitive_values() -> None:
     assert "super-secret-token" not in summary
     assert "correct-horse-battery-staple" not in summary
     assert "visible-value" not in summary
-

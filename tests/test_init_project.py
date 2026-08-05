@@ -153,4 +153,3 @@ def test_initialize_remove_example_deletes_only_declared_paths(tmp_path: Path) -
     assert not (root / "models/staging/stg_customers.sql").exists()
     assert not (root / "tests/assert_example.sql").exists()
     assert (root / "notes.txt").is_file()
-

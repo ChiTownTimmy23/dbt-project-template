@@ -25,4 +25,3 @@ models:
         description: Earliest order date, or null when no order exists.
       - name: last_order_date
         description: Latest order date, or null when no order exists.
-

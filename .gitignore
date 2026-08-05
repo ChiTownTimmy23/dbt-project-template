@@ -1,0 +1,29 @@
+.worktrees/
+
+# Python and uv
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# dbt and DuckDB
+target/
+dbt_packages/
+logs/
+*.duckdb
+*.duckdb.wal
+
+# Documentation
+site/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+profiles.local.yml
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/

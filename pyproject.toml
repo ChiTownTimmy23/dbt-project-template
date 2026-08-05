@@ -1,0 +1,38 @@
+[project]
+name = "dbt-project-template"
+version = "0.1.0"
+description = "A clone-and-go, DuckDB-first dbt project template"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+license = "MIT"
+authors = [{ name = "Timothy Byrne" }]
+dependencies = [
+  "dbt-core==1.12.0",
+  "dbt-duckdb==1.10.1",
+]
+
+[dependency-groups]
+dev = [
+  "mkdocs==1.6.1",
+  "mkdocs-material==9.7.7",
+  "pre-commit==4.6.1",
+  "pytest==9.1.1",
+  "ruff==0.16.1",
+  "sqlfluff==4.2.2",
+  "sqlfluff-templater-dbt==4.2.2",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "UP"]
+

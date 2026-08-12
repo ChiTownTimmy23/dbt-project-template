@@ -8,7 +8,7 @@ license = "MIT"
 authors = [{ name = "Timothy Byrne" }]
 dependencies = [
   "dbt-core==1.12.0",
-  "dbt-duckdb==1.10.1",
+  "dbt-duckdb==1.11.0",
 ]
 
 [dependency-groups]
@@ -17,7 +17,7 @@ dev = [
   "mkdocs-material==9.7.7",
   "pre-commit==4.6.1",
   "pytest==9.1.1",
-  "ruff==0.16.1",
+  "ruff==0.16.2",
   "sqlfluff==4.2.2",
   "sqlfluff-templater-dbt==4.2.2",
 ]
